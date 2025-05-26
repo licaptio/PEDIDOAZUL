@@ -1,139 +1,113 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pedidos Activos</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background: #f0f8ff;
+      background: #e8f4fd;
       margin: 0;
       padding: 20px;
-      text-align: center;
     }
+
     h1 {
-      color: #2980b9;
+      text-align: center;
+      color: #2471A3;
     }
-    .botones {
-      margin-bottom: 30px;
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 30px;
     }
-    .botones a {
-      text-decoration: none;
-      margin: 0 10px;
+
+    .tarjeta {
+      background: white;
+      border-left: 5px solid #2980b9;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s;
     }
-    .botones button {
-      background: #2980b9;
+
+    .tarjeta:hover {
+      transform: scale(1.02);
+    }
+
+    .tarjeta h2 {
+      margin: 0 0 10px;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+
+    .tarjeta p {
+      margin: 0;
+      color: #555;
+      white-space: pre-line;
+    }
+
+    .menu {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .menu button {
+      background-color: #2980b9;
       color: white;
       border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .nota {
-      background: #fff;
-      margin: 10px auto;
-      padding: 16px;
-      border-left: 5px solid #2980b9;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      max-width: 600px;
-      text-align: left;
-    }
-    .nota button {
-      margin-right: 8px;
-      padding: 6px 10px;
-      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 12px;
     }
-    .editar-btn { background: #3498db; color: white; }
-    .eliminar-btn { background: #e74c3c; color: white; }
-    .archivar-btn { background: #f39c12; color: white; }
   </style>
 </head>
 <body>
-  <h1>📄 PEDIDOS ACTIVOS</h1>
-  <div class="botones">
-    <a href="index.html"><button>🏠 Menú</button></a>
-    <a href="crear-pedido.html"><button>➕ Crear Pedido</button></a>
-<a href="pedidos-archivados.html"><button>📦 Ver Archivados</button></a>
+  <h1>📦 Pedidos Activos</h1>
+  <div class="menu">
+    <a href="index.html"><button>🏠 Volver al Menú</button></a>
   </div>
-
-  <div id="contenedorNotas">Cargando pedidos...</div>
+  <div class="tarjetas" id="contenedor"></div>
 
   <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+
     const supabase = createClient(
       'https://cvpbtjlupswbyxenugpz.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY'
     );
-    const contenedor = document.getElementById("contenedorNotas");
 
-    async function cargarNotas() {
-      const { data, error } = await supabase
-        .from("PEDIDOS")
-        .select("*")
-        .eq("archived", false)
-        .order("fecha", { ascending: false });
+    const contenedor = document.getElementById("contenedor");
 
-      if (error || !data) {
-        contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar pedidos.</p>";
-        console.error(error);
-        return;
-      }
+    const { data: pedidos, error } = await supabase
+      .from("PEDIDOS")
+      .select("*")
+      .eq("archived", false)
+      .order("folio", { ascending: false });
 
-      if (data.length === 0) {
-        contenedor.innerHTML = "<p>No hay pedidos registrados.</p>";
-        return;
-      }
-
-      contenedor.innerHTML = "";
-      data.forEach(pedido => {
-        contenedor.innerHTML += `
-          <div class="nota">
-            <strong>${pedido.titulo}</strong><br>
-            <small>${new Date(pedido.fecha).toLocaleString()} | Folio: ${pedido.folio}</small><br><br>
-            <div>${pedido.contenido}</div><br>
-            <button class="editar-btn" data-folio="${pedido.folio}">Editar</button>
-            <button class="eliminar-btn" data-folio="${pedido.folio}">Eliminar</button>
-            <button class="archivar-btn" data-folio="${pedido.folio}">Archivar</button>
-          </div>
+    if (error) {
+      contenedor.innerHTML = `<p>Error al cargar pedidos ❌</p>`;
+      console.error(error);
+    } else if (pedidos.length === 0) {
+      contenedor.innerHTML = `<p>No hay pedidos activos.</p>`;
+    } else {
+      pedidos.forEach(pedido => {
+        const div = document.createElement("div");
+        div.className = "tarjeta";
+        div.innerHTML = `
+          <h2>${pedido.titulo}</h2>
+          <p>${pedido.contenido}</p>
         `;
-      });
-
-      document.querySelectorAll(".editar-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const folio = btn.getAttribute("data-folio");
-          window.location.href = `crear-pedido.html?folio=${folio}`;
-        });
-      });
-
-      document.querySelectorAll(".eliminar-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const folio = btn.getAttribute("data-folio");
-          if (confirm(`¿Eliminar el pedido con folio ${folio}?`)) {
-            const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
-            if (!error) location.reload();
-          }
-        });
-      });
-
-      document.querySelectorAll(".archivar-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const folio = btn.getAttribute("data-folio");
-          if (confirm(`¿Archivar el pedido con folio ${folio}?`)) {
-            const { error } = await supabase.from("PEDIDOS").update({ archived: true }).eq("folio", folio);
-            if (!error) location.reload();
-          }
-        });
+        div.onclick = () => {
+          window.location.href = `crear-pedido.html?folio=${pedido.folio}`;
+        };
+        contenedor.appendChild(div);
       });
     }
-
-    cargarNotas();
   </script>
 </body>
 </html>
