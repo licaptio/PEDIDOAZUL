@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>NOTAS ARCHIVADAS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f0f0;
+      padding: 20px;
+    }
+    h1 {
+      color: #2980b9;
+      text-align: center;
+    }
+    .nota {
+      background: white;
+      padding: 15px;
+      margin: 10px auto;
+      border-left: 4px solid #2980b9;
+      border-radius: 6px;
+      max-width: 600px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>NOTAS ARCHIVADAS</h1>
+<div style="text-align: center; margin-bottom: 20px;">
+  <a href="index.html"><button style="background:#2980b9; color:white; margin-right:10px;">🏠 Menú</button></a>
+  <a href="pagos-activos.html"><button>🔙 Ver Activas</button></a>
+</div>
+
+  <div id="contenedorNotas">Cargando...</div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+    const supabase = createClient(
+      'https://cvpbtjlupswbyxenugpz.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY'
+    );
+
+    const contenedor = document.getElementById("contenedorNotas");
+
+    async function cargarNotas() {
+      const { data, error } = await supabase
+        .from("PEDIDOS")
+        .select("*")
+        .eq("archived", true)
+        .order("fecha", { ascending: false });
+
+      if (error) {
+        contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar archivadas.</p>";
+        console.error(error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        contenedor.innerHTML = "<p>No hay notas archivadas.</p>";
+        return;
+      }
+
+      contenedor.innerHTML = "";
+      data.forEach(nota => {
+contenedor.innerHTML += `
+  <div class="nota">
+    <strong>${nota.titulo}</strong><br>
+    <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
+    <div>${nota.contenido}</div><br>
+    <button data-folio="${nota.folio}" class="desarchivar-btn" style="background:#1abc9c; color:white; margin-right: 10px;">Desarchivar</button>
+    <button data-folio="${nota.folio}" class="eliminar-btn" style="background:#e74c3c; color:white;">Eliminar</button>
+  </div>
+`;
+
+      });
+    }
+
+    cargarNotas();
+document.addEventListener("click", async (e) => {
+  const folio = e.target.getAttribute("data-folio");
+  if (e.target.classList.contains("desarchivar-btn")) {
+    const confirmacion = confirm(`¿Desarchivar la nota con folio ${folio}?`);
+    if (confirmacion) {
+      const { error } = await supabase.from("PEDIDOS").update({ archived: false }).eq("folio", folio);
+      if (error) {
+        alert("❌ Error al desarchivar");
+        console.error(error);
+      } else {
+        alert("✅ Nota desarchivada");
+        location.reload();
+      }
+    }
+  }
+
+  if (e.target.classList.contains("eliminar-btn")) {
+    const confirmacion = confirm(`¿Eliminar permanentemente la nota con folio ${folio}?`);
+    if (confirmacion) {
+      const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
+      if (error) {
+        alert("❌ Error al eliminar");
+        console.error(error);
+      } else {
+        alert("🗑️ Nota eliminada");
+        location.reload();
+      }
+    }
+  }
+});
+
+
+
+
+  </script>
+</body>
+</html>
