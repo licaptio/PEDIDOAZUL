@@ -44,114 +44,107 @@
 
   <div id="contenedorNotas">Cargando...</div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://cvpbtjlupswbyxenugpz.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY'
-    );
+  const supabase = createClient(
+    'https://cvpbtjlupswbyxenugpz.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...<tu-token>'
+  );
 
-    const contenedor = document.getElementById("contenedorNotas");
+  const contenedor = document.getElementById("contenedorNotas");
 
-async function cargarPedidos() {
-const { data, error } = await supabase
-  .from("PEDIDOS")
-  .select("*")
-  .eq("archived", false)
-  .order("fecha", { ascending: false });
+  async function cargarPedidos() {
+    const { data, error } = await supabase
+      .from("PEDIDOS")
+      .select("id, folio, titulo, contenido, fecha")
+      .eq("archived", false)
+      .order("fecha", { ascending: false });
 
-  if (error) {
-    contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar PEDIDO.</p>";
-    console.error(error);
-    return;
+    if (error) {
+      contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar PEDIDO.</p>";
+      console.error(error);
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      contenedor.innerHTML = "<p>No hay PEDIDOS registrados.</p>";
+      return;
+    }
+
+    contenedor.innerHTML = "";
+    data.forEach(nota => {
+      contenedor.innerHTML += `
+        <div class="nota">
+          <strong>${nota.titulo}</strong><br>
+          <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
+          <div>${nota.contenido}</div><br>
+          <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
+          <button data-id="${nota.id}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
+          <button data-id="${nota.id}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
+        </div>
+      `;
+    });
+
+    // Editar
+    document.querySelectorAll(".editar-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const folio = btn.getAttribute("data-folio");
+        window.location.href = `crear-pedido.html?folio=${folio}`;
+      });
+    });
+
+    // Eliminar
+    document.querySelectorAll(".eliminar-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        console.log("ID que se intenta eliminar:", id);
+        const confirmacion = confirm("¿Estás seguro de eliminar el pedido?");
+        if (confirmacion) {
+          const { error } = await supabase.from("PEDIDOS").delete().eq("id", id);
+          if (error) {
+            alert("❌ Error al eliminar el pedido");
+            console.error(error);
+          } else {
+            const tarjeta = btn.closest(".nota");
+            if (tarjeta) tarjeta.remove();
+            alert("🗑️ Pedido eliminado correctamente");
+          }
+        }
+      });
+    });
+
+    // Archivar
+    document.querySelectorAll(".archivar-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.getAttribute("data-id");
+        console.log("ID que se intenta archivar:", id);
+        const confirmacion = confirm("¿Archivar PEDIDO?");
+        if (confirmacion) {
+          const { error } = await supabase
+            .from("PEDIDOS")
+            .update({ archived: true })
+            .eq("id", id);
+          if (error) {
+            alert("❌ Error al archivar");
+            console.error(error);
+          } else {
+            const tarjeta = btn.closest(".nota");
+            if (tarjeta) tarjeta.remove();
+            alert("📦 Pedido archivado correctamente");
+          }
+        }
+      });
+    });
   }
 
-  if (!data || data.length === 0) {
-    contenedor.innerHTML = "<p>No hay PEDIDOS registrados.</p>";
-    return;
+  cargarPedidos();
+
+  const mensaje = localStorage.getItem("mensajeExito");
+  if (mensaje) {
+    alert(mensaje);
+    localStorage.removeItem("mensajeExito");
   }
-
-  contenedor.innerHTML = "";
-  data.forEach(nota => {
-contenedor.innerHTML += `
-  <div class="nota">
-    <strong>${nota.titulo}</strong><br>
-    <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
-    <div>${nota.contenido}</div>
-    <br>
-    <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
-    <button data-id="${nota.id}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
-    <button data-id="${nota.id}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
-  </div>
-`;
-  });
-
-// Botón EDITAR
-document.querySelectorAll(".editar-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const folio = btn.getAttribute("data-folio");
-    window.location.href = `crear-pedido.html?folio=${folio}`;
-  });
-});
-
-// Botón ELIMINAR (elimina de verdad)
-document.querySelectorAll(".eliminar-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.getAttribute("data-id");
-    console.log("ID que se intenta eliminar:", id);
-    const confirmacion = confirm(`¿Estás seguro de eliminar el pedido?`);
-    if (confirmacion) {
-      const { error } = await supabase.from("PEDIDOS").delete().eq("id", id);
-      if (error) {
-        alert("❌ Error al eliminar el pedido");
-        console.error(error);
-      } else {
-        const tarjeta = btn.closest(".nota");
-        if (tarjeta) tarjeta.remove();
-        alert("🗑️ Pedido eliminado correctamente");
-      }
-    }
-  });
-});
-
-document.querySelectorAll(".archivar-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.getAttribute("data-id");
-    console.log("ID que se intenta archivar:", id);
-    const confirmacion = confirm(`¿Archivar PEDIDO?`);
-    if (confirmacion) {
-      const { data, error } = await supabase
-        .from("PEDIDOS")
-        .update({ archived: true })
-        .eq("id", id)
-        .select();
-
-      console.log("Resultado de archivar:", data, error);
-
-      if (error) {
-        alert("❌ Error al archivar");
-        console.error(error);
-      } else {
-        const tarjeta = btn.closest(".nota");
-        if (tarjeta) tarjeta.remove();
-        alert("📦 Pedido archivado correctamente");
-      }
-    }
-  });
-});
-
-
-}
-
-    cargarPedidos();
-
-const mensaje = localStorage.getItem("mensajeExito");
-if (mensaje) {
-  alert(mensaje); // Puedes reemplazar por un banner si prefieres
-  localStorage.removeItem("mensajeExito");
-}
-
-  </script>
+</script>
 </body>
 </html>
