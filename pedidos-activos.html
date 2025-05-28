@@ -54,11 +54,11 @@ const supabase = createClient(
   const contenedor = document.getElementById("contenedorNotas");
 
   async function cargarPedidos() {
-    const { data, error } = await supabase
-      .from("PEDIDOS")
-      .select("id, folio, titulo, contenido, fecha")
-      .eq("archived", false)
-      .order("fecha", { ascending: false });
+const { data, error } = await supabase
+  .from("PEDIDOS")
+  .select("id, folio, titulo, contenido, fecha") // Asegúrate de incluir "id"
+  .eq("archived", false)
+  .order("fecha", { ascending: false });
 
     if (error) {
       contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar PEDIDO.</p>";
