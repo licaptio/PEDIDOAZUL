@@ -34,86 +34,83 @@
 
   <div id="contenedorNotas">Cargando...</div>
 
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-    const supabase = createClient(
-      'https://cvpbtjlupswbyxenugpz.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY'
-    );
+  const supabase = createClient(
+    'https://cvpbtjlupswbyxenugpz.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN2cGJ0amx1cHN3Ynl4ZW51Z3B6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDIxOTQsImV4cCI6MjA2MzI3ODE5NH0.iiJsYM3TtaGPdeCtPcEXwAz3LfFc1uJGECEvOErvrqY'
+  );
 
-    const contenedor = document.getElementById("contenedorNotas");
+  const contenedor = document.getElementById("contenedorNotas");
 
-    async function cargarNotas() {
-      const { data, error } = await supabase
-        .from("PEDIDOS")
-        .select("*")
-        .eq("archived", true)
-        .order("fecha", { ascending: false });
+  async function cargarNotas() {
+    const { data, error } = await supabase
+      .from("PEDIDOS")
+      .select("id, folio, titulo, contenido, fecha")
+      .eq("archived", true)
+      .order("fecha", { ascending: false });
 
-      if (error) {
-        contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar archivadas.</p>";
-        console.error(error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        contenedor.innerHTML = "<p>No hay notas archivadas.</p>";
-        return;
-      }
-
-      contenedor.innerHTML = "";
-      data.forEach(nota => {
-contenedor.innerHTML += `
-  <div class="nota">
-    <strong>${nota.titulo}</strong><br>
-    <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
-    <div>${nota.contenido}</div><br>
-    <button data-folio="${nota.folio}" class="desarchivar-btn" style="background:#1abc9c; color:white; margin-right: 10px;">Desarchivar</button>
-    <button data-folio="${nota.folio}" class="eliminar-btn" style="background:#e74c3c; color:white;">Eliminar</button>
-  </div>
-`;
-
-      });
+    if (error) {
+      contenedor.innerHTML = "<p style='color:red;'>❌ Error al cargar archivadas.</p>";
+      console.error(error);
+      return;
     }
 
-    cargarNotas();
-document.addEventListener("click", async (e) => {
-  const folio = e.target.getAttribute("data-folio");
-  if (e.target.classList.contains("desarchivar-btn")) {
-    const confirmacion = confirm(`¿Desarchivar la nota con folio ${folio}?`);
-    if (confirmacion) {
-      const { error } = await supabase.from("PEDIDOS").update({ archived: false }).eq("folio", folio);
-      if (error) {
-        alert("❌ Error al desarchivar");
-        console.error(error);
-      } else {
-const tarjeta = e.target.closest(".nota");
-if (tarjeta) tarjeta.remove();
-alert("✅ Nota desarchivada");
-      }
+    if (!data || data.length === 0) {
+      contenedor.innerHTML = "<p>No hay notas archivadas.</p>";
+      return;
     }
+
+    contenedor.innerHTML = "";
+    data.forEach(nota => {
+      contenedor.innerHTML += `
+        <div class="nota">
+          <strong>${nota.titulo}</strong><br>
+          <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
+          <div>${nota.contenido}</div><br>
+          <button data-id="${nota.id}" class="desarchivar-btn" style="background:#1abc9c; color:white; margin-right: 10px;">Desarchivar</button>
+          <button data-id="${nota.id}" class="eliminar-btn" style="background:#e74c3c; color:white;">Eliminar</button>
+        </div>
+      `;
+    });
   }
 
-  if (e.target.classList.contains("eliminar-btn")) {
-    const confirmacion = confirm(`¿Eliminar permanentemente la nota con folio ${folio}?`);
-    if (confirmacion) {
-      const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
-      if (error) {
-        alert("❌ Error al eliminar");
-        console.error(error);
-      } else {
-const tarjeta = e.target.closest(".nota");
-if (tarjeta) tarjeta.remove();
-alert("🗑️ Nota eliminada");
+  cargarNotas();
+
+  document.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-id");
+
+    if (e.target.classList.contains("desarchivar-btn")) {
+      const confirmacion = confirm(`¿Desarchivar este pedido?`);
+      if (confirmacion) {
+        const { error } = await supabase.from("PEDIDOS").update({ archived: false }).eq("id", id);
+        if (error) {
+          alert("❌ Error al desarchivar");
+          console.error(error);
+        } else {
+          const tarjeta = e.target.closest(".nota");
+          if (tarjeta) tarjeta.remove();
+          alert("✅ Pedido desarchivado");
+        }
       }
     }
-  }
-});
 
-
-
-
-  </script>
+    if (e.target.classList.contains("eliminar-btn")) {
+      const confirmacion = confirm(`¿Eliminar permanentemente este pedido?`);
+      if (confirmacion) {
+        const { error } = await supabase.from("PEDIDOS").delete().eq("id", id);
+        if (error) {
+          alert("❌ Error al eliminar");
+          console.error(error);
+        } else {
+          const tarjeta = e.target.closest(".nota");
+          if (tarjeta) tarjeta.remove();
+          alert("🗑️ Pedido eliminado");
+        }
+      }
+    }
+  });
+</script>
 </body>
 </html>
