@@ -29,7 +29,7 @@
   <h1>NOTAS ARCHIVADAS</h1>
 <div style="text-align: center; margin-bottom: 20px;">
   <a href="index.html"><button style="background:#2980b9; color:white; margin-right:10px;">🏠 Menú</button></a>
-  <a href="pagos-activos.html"><button>🔙 Ver Activas</button></a>
+<a href="pedidos-activos.html"><button>🔙 Ver Activos</button></a>
 </div>
 
   <div id="contenedorNotas">Cargando...</div>
@@ -88,8 +88,9 @@ document.addEventListener("click", async (e) => {
         alert("❌ Error al desarchivar");
         console.error(error);
       } else {
-        alert("✅ Nota desarchivada");
-        location.reload();
+const tarjeta = e.target.closest(".nota");
+if (tarjeta) tarjeta.remove();
+alert("✅ Nota desarchivada");
       }
     }
   }
@@ -102,8 +103,9 @@ document.addEventListener("click", async (e) => {
         alert("❌ Error al eliminar");
         console.error(error);
       } else {
-        alert("🗑️ Nota eliminada");
-        location.reload();
+const tarjeta = e.target.closest(".nota");
+if (tarjeta) tarjeta.remove();
+alert("🗑️ Nota eliminada");
       }
     }
   }
