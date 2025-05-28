@@ -75,16 +75,16 @@ const { data, error } = await supabase
   contenedor.innerHTML = "";
   data.forEach(nota => {
     contenedor.innerHTML += `
-      <div class="nota">
-        <strong>${nota.titulo}</strong><br>
-        <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
-        <div>${nota.contenido}</div>
-        <br>
-        <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
-        <button data-folio="${nota.folio}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
-<button data-folio="${nota.folio}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
+<div class="nota">
+  <strong>${nota.titulo}</strong><br>
+  <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
+  <div>${nota.contenido}</div>
+  <br>
+  <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
+  <button data-id="${nota.id}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
+  <button data-id="${nota.id}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
+</div>
 
-      </div>
     `;
   });
 
@@ -99,10 +99,11 @@ document.querySelectorAll(".editar-btn").forEach(btn => {
 // Botón ELIMINAR (elimina de verdad)
 document.querySelectorAll(".eliminar-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
-    const folio = btn.getAttribute("data-folio");
-    const confirmacion = confirm(`¿Estás seguro de eliminar el pedido con folio ${folio}?`);
+    const id = btn.getAttribute("data-id");
+    console.log("ID que se intenta eliminar:", id);
+    const confirmacion = confirm(`¿Estás seguro de eliminar el pedido?`);
     if (confirmacion) {
-      const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
+      const { error } = await supabase.from("PEDIDOS").delete().eq("id", id);
       if (error) {
         alert("❌ Error al eliminar el pedido");
         console.error(error);
@@ -117,16 +118,17 @@ document.querySelectorAll(".eliminar-btn").forEach(btn => {
 
 document.querySelectorAll(".archivar-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
-    const folio = btn.getAttribute("data-folio");
-    const confirmacion = confirm(`¿Archivar PEDIDO con folio ${folio}?`);
+    const id = btn.getAttribute("data-id");
+    console.log("ID que se intenta archivar:", id);
+    const confirmacion = confirm(`¿Archivar PEDIDO?`);
     if (confirmacion) {
       const { data, error } = await supabase
         .from("PEDIDOS")
         .update({ archived: true })
-        .eq("folio", folio)
+        .eq("id", id)
         .select();
 
-      console.log("Resultado de archivar:", data, error); // 👈 Agregado
+      console.log("Resultado de archivar:", data, error);
 
       if (error) {
         alert("❌ Error al archivar");
