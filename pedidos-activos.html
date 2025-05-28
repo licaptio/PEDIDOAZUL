@@ -88,49 +88,58 @@ const { data, error } = await supabase
     `;
   });
 
+// Botón EDITAR
 document.querySelectorAll(".editar-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     const folio = btn.getAttribute("data-folio");
-window.location.href = `crear-pedido.html?folio=${folio}`;
+    window.location.href = `crear-pedido.html?folio=${folio}`;
   });
 });
 
-
+// Botón ELIMINAR (elimina de verdad)
 document.querySelectorAll(".eliminar-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const folio = btn.getAttribute("data-folio");
     const confirmacion = confirm(`¿Estás seguro de eliminar el pedido con folio ${folio}?`);
     if (confirmacion) {
-const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
-if (error) {
-  alert("❌ Error al eliminar el pedido");
-  console.error(error);
-} else {
-  alert("🗑️ Pedido eliminado correctamente");
-  location.reload();
-}
-
+      const { error } = await supabase.from("PEDIDOS").delete().eq("folio", folio);
+      if (error) {
+        alert("❌ Error al eliminar el pedido");
+        console.error(error);
+      } else {
+        const tarjeta = btn.closest(".nota");
+        if (tarjeta) tarjeta.remove();
+        alert("🗑️ Pedido eliminado correctamente");
+      }
     }
   });
 });
 
-// ✅ Aquí va el bloque archivar, separado
 document.querySelectorAll(".archivar-btn").forEach(btn => {
   btn.addEventListener("click", async () => {
     const folio = btn.getAttribute("data-folio");
     const confirmacion = confirm(`¿Archivar PEDIDO con folio ${folio}?`);
     if (confirmacion) {
-      const { error } = await supabase.from("PEDIDOS").update({ archived: true }).eq("folio", folio);
+      const { data, error } = await supabase
+        .from("PEDIDOS")
+        .update({ archived: true })
+        .eq("folio", folio)
+        .select();
+
+      console.log("Resultado de archivar:", data, error); // 👈 Agregado
+
       if (error) {
         alert("❌ Error al archivar");
         console.error(error);
       } else {
-        alert("📦 PEDIDO archivado");
-        location.reload();
+        const tarjeta = btn.closest(".nota");
+        if (tarjeta) tarjeta.remove();
+        alert("📦 Pedido archivado correctamente");
       }
     }
   });
 });
+
 
 }
 
