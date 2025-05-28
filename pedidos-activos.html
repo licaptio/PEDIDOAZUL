@@ -74,18 +74,17 @@ const { data, error } = await supabase
 
   contenedor.innerHTML = "";
   data.forEach(nota => {
-    contenedor.innerHTML += `
-<div class="nota">
-  <strong>${nota.titulo}</strong><br>
-  <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
-  <div>${nota.contenido}</div>
-  <br>
-  <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
-  <button data-id="${nota.id}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
-  <button data-id="${nota.id}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
-</div>
-
-    `;
+contenedor.innerHTML += `
+  <div class="nota">
+    <strong>${nota.titulo}</strong><br>
+    <small>${new Date(nota.fecha).toLocaleString()} | Folio: ${nota.folio}</small><br><br>
+    <div>${nota.contenido}</div>
+    <br>
+    <button data-folio="${nota.folio}" class="editar-btn">Editar</button>
+    <button data-id="${nota.id}" class="eliminar-btn" style="margin-left: 10px; background:#e74c3c;">Eliminar</button>
+    <button data-id="${nota.id}" class="archivar-btn" style="margin-left: 10px; background:#f39c12;">Archivar</button>
+  </div>
+`;
   });
 
 // Botón EDITAR
